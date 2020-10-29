@@ -151,15 +151,15 @@ setitimer(ITIMER_REAL, {it_interval={0, 0}, it_value={999, 0}}, NULL) = 0
 connect(3, {sa_family=AF_INET, sin_port=htons(80), sin_addr=inet_addr("192.168.100.0")}, 16) = -1 ETIMEDOUT (Connection timed out)
 ```
 
-# 各種ツールの挙動を調べたログ
+# 各種ツールの挙動を調べる
 
-## curl --connect-timeout
+# curl --connect-timeout
 
 ```
 curl --connect-timeout 5 192.168.100.1
 ```
 
-#### USAGE
+## USAGE
 
 ```
        --connect-timeout <seconds>
@@ -168,7 +168,7 @@ curl --connect-timeout 5 192.168.100.1
 
 ```
 
-#### strace の結果
+## strace の結果
 
 fcntl(2) O_NONBLOCK + poll(2) で待つ
 
@@ -189,9 +189,9 @@ close(3)                                = 0
        28     Operation timeout. The specified time-out period was reached according to the conditions.
 ```
 
-## curl --max-time
+# curl --max-time
 
-#### USAGE
+## USAGE
 
 --max-time は実時間で curl の実行を制御する。「curlを実行してからN秒」でタイムアウトする
 
@@ -226,9 +226,9 @@ alarm(5)                              = 0
 
 なるほど感高いなー 
 
-## wget --connect-timeout
+# wget --connect-timeout
 
-#### USAGE
+## USAGE
 
 ```
        --connect-timeout=seconds
@@ -260,7 +260,7 @@ wget は勝手に retry するのであった
 
 と2つのコンテキストで ___リトライ___ が行われることになる 
 
-#### strace の結果
+### strace の結果
 
 --connect-timeout の実体は setitimer(ITTIMER_REAL) 
 
@@ -276,13 +276,13 @@ rt_sigaction(SIGALRM, {SIG_DFL, [ALRM], SA_RESTORER|SA_RESTART, 0x7f0282b6e9a0},
 close(3)                                = 0
 ```
 
-## nc
+# nc
 
 ```
 nc 192.168.100.1 80
 ```
 
-#### strace の結果
+### strace の結果
 
 nc はデフォルトではタイムアウト値を指定しない
 
@@ -307,13 +307,13 @@ close(3)                                = 0
 
 再送の間隔が ___1 -> 2 -> 4 -> 8 -> 16___ ( http://d.hatena.ne.jp/rx7/20131129/p1 も読んでね )
 
-## nc -w 
+# nc -w 
 
 ```
 nc -w 10 192.168.100.0 80
 ```
 
-#### USAGE
+## USAGE
 
 ```
      -w timeout
@@ -323,7 +323,7 @@ nc -w 10 192.168.100.0 80
 
 connection と stdin の idle 時間のタイムアウトらしい
 
-#### strace の結果
+### strace の結果
 
 connect(2) で待つ場合は select(2) の待ち時間を指すようだ
 
@@ -348,9 +348,9 @@ fcntl(3, F_SETFL, O_RDWR)               = 0
 poll([{fd=3, events=POLLIN}, {fd=0, events=POLLIN}], 2, 10000) = 0 (Timeout)
 ```
 
-## wget --dns-timeout
+# wget --dns-timeout
 
-#### USAGE
+## USAGE
 
 ```
        --dns-timeout=seconds
@@ -370,7 +370,7 @@ poll([{fd=3, events=POLLIN}, {fd=0, events=POLLIN}], 2, 10000) = 0 (Timeout)
 
 nameserver に適当に不達のIP を指定してタイムアウトのテストすると良い
 
-#### strace の結果
+### strace の結果
 
 ```
 setitimer(ITIMER_REAL, {it_interval={0, 0}, it_value={999, 0}}, NULL) = 0
@@ -391,9 +391,9 @@ poll([{fd=3, events=POLLIN}], 1, 4999)  = ? ERESTART_RESTARTBLOCK (To be restart
 --- SIGALRM (Alarm clock) @ 0 (0) ---
 ```
 
-## wget --read-timeout
+# wget --read-timeout
 
-#### USAGE
+## USAGE
 
 ```
        --read-timeout=seconds
@@ -419,7 +419,7 @@ Retrying.
 Connecting to 127.0.0.1:8080... failed: Connection refused.
 ```
 
-#### strace の結果
+### strace の結果
 
 ```
 socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 3
@@ -432,9 +432,9 @@ write(2, "HTTP request sent, awaiting resp"..., 40HTTP request sent, awaiting re
 select(4, [3], NULL, NULL, {10, 0})     = 0 (Timeout)
 ```
 
-## wget --timeout=seconds
+# wget --timeout=seconds
 
-### USAGE
+## USAGE
 
 ```
        --timeout=seconds
@@ -465,7 +465,7 @@ ERROR 2003 (HY000): Can't connect to MySQL server on '192.168.100.1' (110)
 #
 ```
 
-#### strace の結果
+## strace の結果
 
 ```
 socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 3
@@ -476,14 +476,14 @@ shutdown(3, 2 /* send and receive */)   = -1 ENOTCONN (Transport endpoint is not
 close(3)                                = 0
 ```
 
-## strace mysql ---connect_timeout=5
+## mysql ---connect_timeout=5
 
 ```
 $ mysql -h 192.168.100.1 --connect_timeout=5
 ERROR 2003 (HY000): Can't connect to MySQL server on '192.168.100.1' (4)
 ```
 
-#### strace の結果
+### strace の結果
 
 fcntl(2) O_NONBLOCK + poll(2) を使ってタイムアウトを実装している
 
@@ -508,7 +508,7 @@ nc -l 3306 で accept(2) だけするサーバーをたててテスト。半永�
 $ mysql -h127.0.0.1
 ```
 
-#### strace の結果
+### strace の結果
 
 connect(2) 後の read(2) でブロックする。認証か何かするための read(2) かな?
 
@@ -527,7 +527,7 @@ read(3,
 
 SO_RCVTIMEO, SO_SNDTIMEO を指定しているけど、作用してない?
 
-## mysql --connect_timeout
+# mysql --connect_timeout
 
 nc -l 3306 で accept(2) だけするサーバーをたててテスト
 
@@ -576,7 +576,7 @@ connect_timeout を指定してるとなかなか見慣れないメッセージ�
 ERROR 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 111
 ```
 
-#### サーバ無し、mysql --connect_timeout の strace の結果
+### サーバ無し、mysql --connect_timeout の strace の結果
 
 O_NONBLOCK なので errno がややこしい
 
@@ -606,7 +606,7 @@ shutdown(3, 2 /* send and receive */)   = -1 ENOTCONN (Transport endpoint is not
 close(3)                                = 0
 ```
 
-## より道
+# より道
 
 ```
 $ mysql
@@ -617,13 +617,9 @@ ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/lib
 # UNIXドメインソケットの有無
 ```
 
-----
+# tips
 
-tips
-
-## loopback の tcpdump 
-
-`-i lo` 忘れずに
+loopback の tcpdump では `-i lo` 忘れずに
 
 ```
 sudo tcpdump -i lo port 3306
